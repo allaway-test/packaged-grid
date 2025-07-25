@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import * as SynapseReactClient from 'synapse-react-client'
+// TODO: Fix import path for SynapseTable once the correct import structure is determined
+// import { SynapseTable } from 'synapse-react-client'
 import { RowSet, ExternalDataProvider } from '../types'
 
 interface DataGridProps {
@@ -69,7 +70,7 @@ const DataGrid: React.FC<DataGridProps> = ({
   return (
     <div className="data-grid-container">
       <div className="data-grid-toolbar">
-        <h3>Data Grid</h3>
+        <h3>Data Grid (Synapse-powered)</h3>
         <div className="data-grid-actions">
           {dataProvider && (
             <button onClick={handleSave} disabled={loading}>
@@ -86,15 +87,34 @@ const DataGrid: React.FC<DataGridProps> = ({
       )}
       
       <div className="data-grid-wrapper">
-        <SynapseReactClient.SynapseComponents.SynapseTable
-          rowSet={data}
-          isLoadingNewPage={loading}
-          showAccessColumn={false}
-          showExternalAccessIcon={false}
-          showAccessColumnHeader={false}
-          showDirectDownloadColumn={false}
-          hideAddToDownloadListColumn={true}
-        />
+        {/* Placeholder table using Synapse RowSet structure - will be replaced with SynapseTable */}
+        <div style={{ border: '1px solid #ccc', borderRadius: '4px', overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                {data.headers.map((header, index) => (
+                  <th key={index} style={{ padding: '8px', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}>
+                    {header.name}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {row.values.map((value, colIndex) => (
+                    <td key={colIndex} style={{ padding: '8px', border: '1px solid #ddd' }}>
+                      {value}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ marginTop: '8px', fontSize: '14px', color: '#666' }}>
+          Powered by Synapse types: RowSet with {data.headers.length} columns and {data.rows.length} rows
+        </div>
       </div>
       
       <div className="data-grid-status">

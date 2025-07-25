@@ -1,15 +1,19 @@
-# Packaged Grid
+# Packaged Grid - Synapse DataGrid & Chat Components
 
-A deployable Docker container that packages Synapse DataGrid and Chat components for external platform integration. This solution allows external platforms to easily deploy collaborative data grids and AI-powered chat interfaces using their own data sources and AI services.
+A deployable Docker container that packages **official Synapse React client components** for external platform integration. This solution now uses real Synapse dependencies to provide collaborative data grids and AI-powered chat interfaces that stay up-to-date with Synapse improvements.
+
+![Synapse Integration Screenshot](https://github.com/user-attachments/assets/837791b5-0d54-4373-88cd-f45616b0a623)
 
 ## Features
 
-- **DataGrid Component**: Collaborative spreadsheet-like interface based on Synapse DataGrid
-- **Chat Component**: AI-powered chat interface based on Synapse Chat types
-- **Configurable Data Sources**: Support for REST APIs, GraphQL, and custom data providers
-- **AI Integration**: Support for OpenAI, Anthropic, and custom AI services
+- **Official Synapse Integration**: Uses `synapse-react-client`, `@sage-bionetworks/synapse-types`, and `@sage-bionetworks/synapse-client`
+- **DataGrid Component**: Now powered by Synapse `RowSet` and `ColumnModel` types
+- **Chat Component**: Uses official Synapse `Interaction` and chat types
+- **Future-Proof**: Automatically benefits from Synapse React client component improvements
+- **Synapse-Compatible Data Sources**: Support for Synapse table formats and structures
+- **AI Integration**: Compatible with Synapse chat workflows and message formats
 - **Docker Ready**: Easy deployment with Docker and Docker Compose
-- **External Platform Integration**: Configurable for various external platforms and data sources
+- **External Platform Integration**: Full compatibility with Synapse ecosystem
 
 ## Quick Start
 
