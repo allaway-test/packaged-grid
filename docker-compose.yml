@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  packaged-grid:
+    build: .
+    ports:
+      - "3000:80"
+    environment:
+      # Configuration can be passed via environment variables
+      - VITE_DATA_ENDPOINT=${DATA_ENDPOINT:-/api/data}
+      - VITE_AI_ENDPOINT=${AI_ENDPOINT:-/api/chat}
+      - VITE_AI_API_KEY=${AI_API_KEY}
+      - API_ENDPOINT=${BACKEND_API_URL:-http://localhost:8080}
+    volumes:
+      # Mount custom configuration if needed
+      - ${CONFIG_FILE:-./config.json}:/usr/share/nginx/html/config.json:ro
+    restart: unless-stopped
+    networks:
+      - packaged-grid-network
+
+  # Example backend service (can be replaced with external integrations)
+  # backend:
+  #   image: your-backend-image:latest
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     - DATABASE_URL=${DATABASE_URL}
+  #     - API_KEY=${BACKEND_API_KEY}
+  #   networks:
+  #     - packaged-grid-network
+
+networks:
+  packaged-grid-network:
+    driver: bridge
+
+volumes:
+  config-volume:

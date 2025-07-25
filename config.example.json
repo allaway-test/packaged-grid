@@ -1,0 +1,26 @@
+{
+  "dataProvider": {
+    "type": "rest",
+    "endpoint": "https://your-api.example.com/api/data",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer YOUR_API_TOKEN"
+    },
+    "authentication": {
+      "type": "bearer",
+      "token": "YOUR_API_TOKEN"
+    }
+  },
+  "aiProvider": {
+    "type": "openai",
+    "endpoint": "https://api.openai.com/v1/chat/completions",
+    "apiKey": "YOUR_OPENAI_API_KEY",
+    "model": "gpt-3.5-turbo"
+  },
+  "ui": {
+    "theme": "light",
+    "primaryColor": "#1976d2",
+    "enableChat": true,
+    "enableGrid": true
+  }
+}
