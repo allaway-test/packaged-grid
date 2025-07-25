@@ -11,6 +11,7 @@ const App: React.FC = () => {
   const [dataProvider] = useState(() => new MockDataProvider())
   const [chatProvider] = useState(() => new MockChatProvider())
   const [chatSessionId, setChatSessionId] = useState<string | null>(null)
+  const [chatOpen, setChatOpen] = useState<boolean>(false)
 
   useEffect(() => {
     const platformConfig = loadConfig()
@@ -31,33 +32,58 @@ const App: React.FC = () => {
       </header>
 
       <main className="app-main">
-        <div className="app-layout">
-          {ui?.enableGrid !== false && (
-            <section className="grid-section">
-              <DataGrid
-                dataProvider={dataProvider}
-                enableAutoSave={true}
-                autoSaveDelay={500}
-                onDataChange={(data) => {
-                  console.log('Data changed:', data.length, 'rows')
-                }}
-              />
-            </section>
-          )}
-
-          {ui?.enableChat !== false && (
-            <section className="chat-section">
-              <Chat
-                chatProvider={chatProvider}
-                sessionId={chatSessionId || undefined}
-                onSessionCreate={setChatSessionId}
-                enableHistory={true}
-                placeholder="Ask me about the data or anything else..."
-              />
-            </section>
-          )}
-        </div>
+        {ui?.enableGrid !== false && (
+          <section className="grid-section">
+            <DataGrid
+              dataProvider={dataProvider}
+              enableAutoSave={true}
+              autoSaveDelay={500}
+              onDataChange={(data) => {
+                console.log('Data changed:', data.length, 'rows')
+              }}
+            />
+          </section>
+        )}
       </main>
+
+      {/* Floating Chat */}
+      {ui?.enableChat !== false && (
+        <>
+          {!chatOpen && (
+            <button 
+              className="floating-chat-toggle"
+              onClick={() => setChatOpen(true)}
+              aria-label="Open Chat"
+            >
+              💬
+            </button>
+          )}
+          
+          {chatOpen && (
+            <div className="floating-chat-window">
+              <div className="floating-chat-header">
+                <h3>Chat</h3>
+                <button 
+                  className="floating-chat-close"
+                  onClick={() => setChatOpen(false)}
+                  aria-label="Close Chat"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="floating-chat-content">
+                <Chat
+                  chatProvider={chatProvider}
+                  sessionId={chatSessionId || undefined}
+                  onSessionCreate={setChatSessionId}
+                  enableHistory={true}
+                  placeholder="Ask me about the data or anything else..."
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       <footer className="app-footer">
         <div className="config-info">
