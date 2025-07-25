@@ -2,52 +2,73 @@ import {
   ExternalDataProvider, 
   ExternalChatProvider, 
   DataGridRow, 
-  GridColumn, 
-  Interaction 
 } from '../types'
+import { 
+  RowSet,
+  Row,
+  ColumnModel,
+  ColumnType,
+  SelectColumn,
+  Interaction,
+} from '@sage-bionetworks/synapse-types'
 
 // Mock Data Provider for demonstration
 export class MockDataProvider implements ExternalDataProvider {
-  private data: DataGridRow[] = [
-    { _id: '1', name: 'John Doe', age: 30, email: 'john@example.com' },
-    { _id: '2', name: 'Jane Smith', age: 25, email: 'jane@example.com' },
-    { _id: '3', name: 'Bob Johnson', age: 35, email: 'bob@example.com' },
+  private data: Row[] = [
+    { values: ['1', 'John Doe', '30', 'john@example.com'], versionNumber: 1, rowId: 1, etag: 'etag1' },
+    { values: ['2', 'Jane Smith', '25', 'jane@example.com'], versionNumber: 1, rowId: 2, etag: 'etag2' },
+    { values: ['3', 'Bob Johnson', '35', 'bob@example.com'], versionNumber: 1, rowId: 3, etag: 'etag3' },
   ]
 
-  private columns: GridColumn[] = [
-    { key: 'name', title: 'Name', datatype: 'text', editable: true },
-    { key: 'age', title: 'Age', datatype: 'number', editable: true },
-    { key: 'email', title: 'Email', datatype: 'text', editable: true },
+  private columns: ColumnModel[] = [
+    { name: 'id', columnType: 'STRING' as ColumnType, maximumSize: 50, id: '1' },
+    { name: 'Name', columnType: 'STRING' as ColumnType, maximumSize: 100, id: '2' },
+    { name: 'Age', columnType: 'INTEGER' as ColumnType, id: '3' },
+    { name: 'Email', columnType: 'STRING' as ColumnType, maximumSize: 100, id: '4' },
   ]
 
-  async fetchData(query?: string): Promise<DataGridRow[]> {
+  async fetchData(query?: string): Promise<RowSet> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 500))
     
+    let filteredData = [...this.data]
+    
     if (query) {
       // Simple filtering simulation
-      return this.data.filter(row => 
-        Object.values(row).some(value => 
-          value.toString().toLowerCase().includes(query.toLowerCase())
+      filteredData = this.data.filter(row => 
+        row.values.some(value => 
+          value?.toString().toLowerCase().includes(query.toLowerCase())
         )
       )
     }
     
-    return [...this.data]
+    const rowSet: RowSet = {
+      concreteType: 'org.sagebionetworks.repo.model.table.RowSet',
+      tableId: 'mock-table',
+      etag: 'mock-etag',
+      headers: this.columns.map((col, index) => ({
+        name: col.name,
+        columnType: col.columnType,
+        id: col.id || index.toString(),
+      }) as SelectColumn),
+      rows: filteredData,
+    }
+    
+    return rowSet
   }
 
-  async updateData(data: DataGridRow[]): Promise<boolean> {
+  async updateData(data: RowSet): Promise<boolean> {
     // Simulate API delay
     await new Promise(resolve => setTimeout(resolve, 300))
     
     // In a real implementation, this would send data to your backend
-    this.data = [...data]
+    this.data = [...data.rows]
     console.log('Data updated:', data)
     
     return true
   }
 
-  async getColumns(): Promise<GridColumn[]> {
+  async getColumns(): Promise<ColumnModel[]> {
     return [...this.columns]
   }
 
@@ -55,10 +76,10 @@ export class MockDataProvider implements ExternalDataProvider {
   addSampleData() {
     const newId = (this.data.length + 1).toString()
     this.data.push({
-      _id: newId,
-      name: `User ${newId}`,
-      age: Math.floor(Math.random() * 50) + 20,
-      email: `user${newId}@example.com`,
+      values: [newId, `User ${newId}`, (Math.floor(Math.random() * 50) + 20).toString(), `user${newId}@example.com`],
+      versionNumber: 1,
+      rowId: parseInt(newId),
+      etag: `etag${newId}`,
     })
   }
 }
@@ -119,7 +140,7 @@ export class RestApiDataProvider implements ExternalDataProvider {
     private headers: Record<string, string> = {}
   ) {}
 
-  async fetchData(query?: string): Promise<DataGridRow[]> {
+  async fetchData(query?: string): Promise<RowSet> {
     const url = query ? `${this.baseUrl}/data?q=${encodeURIComponent(query)}` : `${this.baseUrl}/data`
     
     const response = await fetch(url, {
@@ -133,7 +154,7 @@ export class RestApiDataProvider implements ExternalDataProvider {
     return await response.json()
   }
 
-  async updateData(data: DataGridRow[]): Promise<boolean> {
+  async updateData(data: RowSet): Promise<boolean> {
     const response = await fetch(`${this.baseUrl}/data`, {
       method: 'PUT',
       headers: {
@@ -150,7 +171,7 @@ export class RestApiDataProvider implements ExternalDataProvider {
     return true
   }
 
-  async getColumns(): Promise<GridColumn[]> {
+  async getColumns(): Promise<ColumnModel[]> {
     const response = await fetch(`${this.baseUrl}/columns`, {
       headers: this.headers,
     })

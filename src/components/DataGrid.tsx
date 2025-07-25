@@ -1,105 +1,55 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import {
-  DataSheetGrid,
-  keyColumn,
-  Column,
-  createTextColumn,
-} from 'react-datasheet-grid'
-import 'react-datasheet-grid/dist/style.css'
-import { DataGridRow, GridColumn, ExternalDataProvider } from '../types'
-import throttle from 'lodash-es/throttle'
+import React, { useState, useEffect } from 'react'
+import * as SynapseReactClient from 'synapse-react-client'
+import { RowSet, ExternalDataProvider } from '../types'
 
 interface DataGridProps {
   dataProvider?: ExternalDataProvider
-  initialData?: DataGridRow[]
-  initialColumns?: GridColumn[]
-  onDataChange?: (data: DataGridRow[]) => void
+  initialData?: RowSet
+  onDataChange?: (data: RowSet) => void
   enableAutoSave?: boolean
   autoSaveDelay?: number
 }
 
 const DataGrid: React.FC<DataGridProps> = ({
   dataProvider,
-  initialData = [],
-  initialColumns = [],
+  initialData,
   onDataChange,
   enableAutoSave = true,
   autoSaveDelay = 500,
 }) => {
-  const [data, setData] = useState<DataGridRow[]>(initialData)
-  const [columns, setColumns] = useState<Column[]>([])
+  const [data, setData] = useState<RowSet | null>(initialData || null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Convert GridColumn to DataSheetGrid Column format
-  const convertColumns = useCallback((gridColumns: GridColumn[]): Column[] => {
-    return gridColumns.map(col => ({
-      ...keyColumn(col.key, createTextColumn({ continuousUpdates: false })),
-      title: col.title,
-      disabled: col.editable === false,
-      key: col.key, // Add key explicitly for our use
-    }))
-  }, [])
-
-  // Initialize data and columns
+  // Initialize data
   useEffect(() => {
     const initializeGrid = async () => {
       if (dataProvider) {
         setLoading(true)
         try {
-          const [fetchedData, fetchedColumns] = await Promise.all([
-            dataProvider.fetchData(),
-            dataProvider.getColumns(),
-          ])
-          
+          const fetchedData = await dataProvider.fetchData()
           setData(fetchedData)
-          setColumns(convertColumns(fetchedColumns))
         } catch (err) {
           setError(err instanceof Error ? err.message : 'Failed to load data')
         } finally {
           setLoading(false)
         }
-      } else {
-        // Use provided initial data and columns
-        setData(initialData)
-        setColumns(convertColumns(initialColumns))
       }
     }
 
     initializeGrid()
-  }, [dataProvider, initialData, initialColumns, convertColumns])
-
-  // Auto-save functionality
-  const autoSave = useCallback(
-    throttle(async (newData: DataGridRow[]) => {
-      if (dataProvider && enableAutoSave) {
-        try {
-          await dataProvider.updateData(newData)
-        } catch (err) {
-          setError(err instanceof Error ? err.message : 'Failed to save data')
-        }
-      }
-      
-      if (onDataChange) {
-        onDataChange(newData)
-      }
-    }, autoSaveDelay),
-    [dataProvider, enableAutoSave, autoSaveDelay, onDataChange]
-  )
-
-  // Handle data changes
-  const handleChange = (newData: DataGridRow[]) => {
-    setData(newData)
-    autoSave(newData)
-  }
+  }, [dataProvider])
 
   // Manual save function
   const handleSave = async () => {
-    if (dataProvider) {
+    if (dataProvider && data) {
       setLoading(true)
       try {
         await dataProvider.updateData(data)
         setError(null)
+        if (onDataChange) {
+          onDataChange(data)
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to save data')
       } finally {
@@ -108,26 +58,12 @@ const DataGrid: React.FC<DataGridProps> = ({
     }
   }
 
-  // Add new row
-  const addRow = () => {
-    const newRow: DataGridRow = {}
-    columns.forEach(col => {
-      const colKey = (col as any).key as string
-      if (colKey) {
-        newRow[colKey] = ''
-      }
-    })
-    
-    // Add a unique ID for tracking
-    newRow._id = Date.now().toString()
-    
-    const newData = [...data, newRow]
-    setData(newData)
-    autoSave(newData)
+  if (loading && !data) {
+    return <div>Loading grid data...</div>
   }
 
-  if (loading && data.length === 0) {
-    return <div>Loading grid data...</div>
+  if (!data) {
+    return <div>No data available</div>
   }
 
   return (
@@ -135,9 +71,6 @@ const DataGrid: React.FC<DataGridProps> = ({
       <div className="data-grid-toolbar">
         <h3>Data Grid</h3>
         <div className="data-grid-actions">
-          <button onClick={addRow} disabled={loading}>
-            Add Row
-          </button>
           {dataProvider && (
             <button onClick={handleSave} disabled={loading}>
               {loading ? 'Saving...' : 'Save'}
@@ -153,26 +86,19 @@ const DataGrid: React.FC<DataGridProps> = ({
       )}
       
       <div className="data-grid-wrapper">
-        <DataSheetGrid
-          value={data}
-          columns={columns}
-          onChange={handleChange}
-          rowKey="_id"
-          createRow={() => ({
-            _id: Date.now().toString(),
-            ...columns.reduce((acc, col) => {
-              const colKey = (col as any).key as string
-              if (colKey) {
-                acc[colKey] = ''
-              }
-              return acc
-            }, {} as DataGridRow)
-          })}
+        <SynapseReactClient.SynapseComponents.SynapseTable
+          rowSet={data}
+          isLoadingNewPage={loading}
+          showAccessColumn={false}
+          showExternalAccessIcon={false}
+          showAccessColumnHeader={false}
+          showDirectDownloadColumn={false}
+          hideAddToDownloadListColumn={true}
         />
       </div>
       
       <div className="data-grid-status">
-        <p>Rows: {data.length} | Columns: {columns.length}</p>
+        <p>Rows: {data.rows.length} | Columns: {data.headers.length}</p>
         {enableAutoSave && <p>Auto-save enabled</p>}
       </div>
     </div>

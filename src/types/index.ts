@@ -1,65 +1,19 @@
-// Chat Types - Based on Synapse Chat.ts
-export enum AgentAccessLevel {
-  PUBLICLY_ACCESSIBLE = 'PUBLICLY_ACCESSIBLE',
-  READ_YOUR_PRIVATE_DATA = 'READ_YOUR_PRIVATE_DATA',
-  WRITE_YOUR_PRIVATE_DATA = 'WRITE_YOUR_PRIVATE_DATA',
-}
+// Re-export Synapse types for external platform integration
+export type {
+  AgentChatRequest,
+  AgentChatResponse,
+  AgentSession,
+  CreateAgentSessionRequest,
+  Interaction,
+  SessionHistoryResponse,
+  RowSet,
+  Row,
+  ColumnModel,
+  ColumnType,
+  SelectColumn,
+} from '@sage-bionetworks/synapse-types'
 
-export type CreateAgentSessionRequest = {
-  agentAccessLevel: AgentAccessLevel
-  agentRegistrationId?: string
-}
-
-export type UpdateAgentSessionRequest = {
-  agentAccessLevel: AgentAccessLevel
-  sessionId: string
-}
-
-export type AgentSession = {
-  sessionId: string
-  agentAccessLevel: AgentAccessLevel
-  startedOn: string
-  agentRegistrationId?: string
-}
-
-export type AgentChatRequest = {
-  sessionId: string
-  chatText: string
-  enableTrace?: boolean
-}
-
-export type AgentChatResponse = {
-  sessionId: string
-  responseText: string
-}
-
-export type Interaction = {
-  usersRequestText: string
-  usersRequestTimestamp: string
-  agentResponseText: string
-  agentResponseTimestamp: string
-}
-
-export type SessionHistoryResponse = {
-  sessionId: string
-  page: Interaction[]
-  nextPageToken?: string
-}
-
-export type TraceEvent = {
-  timestamp: number
-  message: string
-}
-
-// DataGrid Types - Simplified from Synapse DataGrid
-export type GridConfig = {
-  enableRealTimeCollaboration?: boolean
-  enableWebSocket?: boolean
-  dataSource?: 'api' | 'websocket' | 'static'
-  apiEndpoint?: string
-  websocketUrl?: string
-}
-
+// Additional types for external platform integration
 export type DataGridRow = { [key: string]: string | number }
 
 export type GridColumn = {
@@ -102,13 +56,13 @@ export type PlatformConfig = {
 }
 
 export type ExternalDataProvider = {
-  fetchData: (query?: string) => Promise<DataGridRow[]>
-  updateData: (data: DataGridRow[]) => Promise<boolean>
-  getColumns: () => Promise<GridColumn[]>
+  fetchData: (query?: string) => Promise<import('@sage-bionetworks/synapse-types').RowSet>
+  updateData: (data: import('@sage-bionetworks/synapse-types').RowSet) => Promise<boolean>
+  getColumns: () => Promise<import('@sage-bionetworks/synapse-types').ColumnModel[]>
 }
 
 export type ExternalChatProvider = {
   sendMessage: (message: string, sessionId?: string) => Promise<string>
   createSession: () => Promise<string>
-  getHistory: (sessionId: string) => Promise<Interaction[]>
+  getHistory: (sessionId: string) => Promise<import('@sage-bionetworks/synapse-types').Interaction[]>
 }

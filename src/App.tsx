@@ -39,7 +39,7 @@ const App: React.FC = () => {
               enableAutoSave={true}
               autoSaveDelay={500}
               onDataChange={(data) => {
-                console.log('Data changed:', data.length, 'rows')
+                console.log('Data changed:', data.rows.length, 'rows')
               }}
             />
           </section>
